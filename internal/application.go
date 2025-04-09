@@ -1,14 +1,17 @@
-// internal/application.go
 package internal
 
 import (
 	"log/slog"
 
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/data"
+	"github.com/RudyItza/mek-ah-tell-yuh/internal/render"
 )
 
-// Application struct that holds the logger and feedback models
+// Application holds application-wide dependencies.
 type Application struct {
-	Logger   *slog.Logger        // Capitalized field to export it
-	Feedback *data.FeedbackModel // Capitalized field to export it
+	Logger    *slog.Logger
+	Feedback  *data.FeedbackModel
+	Templates *render.TemplateManager
+	Session   *Session // Use your custom Session type here, not *sessions.CookieStore
+	Stories   *data.StoryModel
 }

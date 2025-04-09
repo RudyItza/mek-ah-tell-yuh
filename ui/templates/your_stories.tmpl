@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>Your Stories - Mek Ah Tell Yuh</title>
+    <style>
+        /* Your general styles */
+    </style>
+</head>
+<body>
+    <div class="character"></div> <!-- Floating character animation -->
+
+    <div class="center-container">
+        <h1 class="text-4xl font-bold mb-4">Your Stories</h1>
+        <!-- Display a list of the user's stories -->
+        {{if .Stories}}
+            <div class="story-list">
+                {{range .Stories}}
+                    <div class="story-item">
+                        <h2 class="text-2xl">{{.Title}}</h2>
+                        <p>{{.Content}}</p>
+                        <a href="/stories/edit/{{.ID}}" class="btn edit">Edit Story</a>
+                        <a href="/stories/delete/{{.ID}}" class="btn delete">Delete Story</a>
+                    </div>
+                {{end}}
+            </div>
+        {{else}}
+            <p>You have no stories yet. <a href="/stories/new" class="btn create">Create Story</a></p>
+        {{end}}
+    </div>
+</body>
+</html>

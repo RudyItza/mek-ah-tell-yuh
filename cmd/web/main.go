@@ -1,4 +1,3 @@
-// File: cmd/main.go
 package main
 
 import (
@@ -8,33 +7,42 @@ import (
 
 	"github.com/RudyItza/mek-ah-tell-yuh/internal"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/data"
+	"github.com/RudyItza/mek-ah-tell-yuh/internal/render"
 	"github.com/RudyItza/mek-ah-tell-yuh/routes"
+	"github.com/gorilla/sessions"
 )
 
 func main() {
-	// Set up the logger
+	// Logger initialization
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-
-	// Database connection string
-	dataSourceName := "postgres://mekuser:folklore@localhost/mekahtellyuh?sslmode=disable" // Replace with your actual DSN
-
-	// Initialize the database
+	// Database initialization
+	dataSourceName := "postgres://mekuser:folklore@localhost/mekahtellyuh?sslmode=disable"
 	db, err := data.InitializeDB(dataSourceName)
 	if err != nil {
 		logger.Error("Failed to connect to the database: " + err.Error())
 		os.Exit(1)
 	}
-	defer db.Close() // Ensure the database connection is closed when the application exits
-
-	// Initialize the Application struct with the logger and feedback model
-	app := &internal.Application{
-		Logger:   logger,
-		Feedback: &data.FeedbackModel{DB: db}, // Pass the database connection to the FeedbackModel
+	defer db.Close()
+	// Template manager initialization
+	tmplMgr, err := render.NewTemplateManager("ui/templates/*.tmpl")
+	if err != nil {
+		logger.Error("Failed to load templates: " + err.Error())
+		os.Exit(1)
 	}
-
-	// Set up routes and pass the application struct
-	mux := routes.Routes(app) // Passing app to the Routes function
+	// Initialize session store
+	sessionStore := sessions.NewCookieStore([]byte("your-secret-key"))
+	// Application initialization
+	app := &internal.Application{
+		Logger:    logger,
+		Feedback:  &data.FeedbackModel{DB: db},
+		Templates: tmplMgr,
+		Session:   sessionStore, // Pass session store here
+		Stories:   &data.StoryModel{DB: db},
+	}
+	// Initialize routes
+	mux := routes.Routes(app)
 	logger.Info("Starting server on :4000")
+
 	err = http.ListenAndServe(":4000", mux)
 	if err != nil {
 		logger.Error(err.Error())

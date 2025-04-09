@@ -22,16 +22,50 @@
     <div class="z-10 p-8 rounded-2xl shadow-2xl max-w-md w-full bg-white/90">
         <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Create a New Story</h2>
         <form method="POST" action="/stories/new">
+            <!-- Title input -->
             <div class="mb-4">
                 <label for="title" class="block text-gray-700 font-medium mb-1">Title</label>
                 <input type="text" name="title" id="title" required
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
             </div>
+
+            <!-- Content input -->
             <div class="mb-6">
                 <label for="content" class="block text-gray-700 font-medium mb-1">Content</label>
                 <textarea name="content" id="content" required
                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
             </div>
+
+            <!-- Language input (dropdown) -->
+            <div class="mb-4">
+                <label for="language" class="block text-gray-700 font-medium mb-1">Language</label>
+                <select name="language" id="language" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <option value="Kriol">Kriol</option>
+                    <option value="Garifuna">Garifuna</option>
+                    <option value="Maya">Maya</option>
+                    <option value="Spanish">Spanish</option>
+                </select>
+            </div>
+
+            <!-- Location input (optional) -->
+            <div class="mb-4">
+                <label for="location" class="block text-gray-700 font-medium mb-1">Location (optional)</label>
+                <input type="text" name="location" id="location" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <!-- Category input (optional) -->
+            <div class="mb-4">
+                <label for="category" class="block text-gray-700 font-medium mb-1">Category (optional)</label>
+                <input type="text" name="category" id="category" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <!-- Hidden user_id input (set automatically on the server-side) -->
+            <input type="hidden" name="user_id" value="{{.UserID}}">
+
+            <!-- Submit button -->
             <button type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">
                 Create Story

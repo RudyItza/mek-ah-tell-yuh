@@ -1,21 +1,25 @@
 package validator
 
+import "fmt"
+
+// Validator is a struct for holding validation errors.
 type Validator struct {
-	Errors map[string][]string
+	Errors []string
 }
 
+// New creates a new Validator instance.
 func New() *Validator {
-	return &Validator{
-		Errors: make(map[string][]string),
+	return &Validator{}
+}
+
+// Check validates a condition and stores an error message if the condition fails.
+func (v *Validator) Check(condition bool, field, message string) {
+	if !condition {
+		v.Errors = append(v.Errors, fmt.Sprintf("%s: %s", field, message))
 	}
 }
 
-func (v *Validator) Check(value bool, field, message string) {
-	if !value {
-		v.Errors[field] = append(v.Errors[field], message)
-	}
-}
-
+// Valid checks if there are no validation errors.
 func (v *Validator) Valid() bool {
 	return len(v.Errors) == 0
 }

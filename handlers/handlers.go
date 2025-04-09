@@ -7,17 +7,38 @@ import (
 	"github.com/RudyItza/mek-ah-tell-yuh/internal"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/data"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/validator"
+
+	"github.com/go-chi/chi"
 )
 
-// Home handler renders the home page
-func Home(w http.ResponseWriter, r *http.Request) {
-	// Just rendering a basic message for now
-	w.Write([]byte("Welcome to Mek Ah Tell Yuh!"))
+// Home renders the home page.
+func Home(app *internal.Application, w http.ResponseWriter, r *http.Request) {
+	err := app.Templates.Render(w, "home.tmpl", nil)
+	if err != nil {
+		app.Logger.Error("Could not render home page", err)
+		http.Error(w, "Could not render home page", http.StatusInternalServerError)
+	}
 }
 
-// CreateFeedback handler for handling feedback submissions
+// Login handles user login.
+func Login(app *internal.Application, w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		// Handle login logic here
+		// Example: Validate user credentials and set session values
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	// Render login page
+	err := app.Templates.Render(w, "login.tmpl", nil)
+	if err != nil {
+		app.Logger.Error("Could not render login page", err)
+		http.Error(w, "Could not render login page", http.StatusInternalServerError)
+	}
+}
+
+// CreateFeedback handles the feedback form submission.
 func CreateFeedback(app *internal.Application, w http.ResponseWriter, r *http.Request) {
-	// Handle POST request for creating feedback
 	if r.Method == http.MethodPost {
 		feedback := &data.Feedback{
 			FullName: r.FormValue("fullname"),
@@ -25,66 +46,172 @@ func CreateFeedback(app *internal.Application, w http.ResponseWriter, r *http.Re
 			Message:  r.FormValue("message"),
 		}
 
-		// Initialize the validator
 		v := validator.New()
-
-		// Perform validation checks
+		// Assuming data.ValidateFeedback is a custom function for validation
 		data.ValidateFeedback(v, feedback)
 
 		if !v.Valid() {
-			// If validation fails, render error message
 			http.Error(w, "Validation failed", http.StatusBadRequest)
 			return
 		}
 
-		// Insert feedback into the database
 		if err := app.Feedback.Insert(feedback); err != nil {
-			// If database insertion fails, render error message
+			app.Logger.Error("Unable to create feedback", err)
 			http.Error(w, fmt.Sprintf("Unable to create feedback: %s", err), http.StatusInternalServerError)
 			return
 		}
 
-		// Redirect to a success page or render a success template
 		http.Redirect(w, r, "/feedback/success", http.StatusSeeOther)
 		return
 	}
 
-	// Render feedback form (you could use a template here)
-	http.ServeFile(w, r, "ui/templates/feedback_form.html")
+	err := app.Templates.Render(w, "feedback_form.tmpl", nil)
+	if err != nil {
+		app.Logger.Error("Could not render feedback form", err)
+		http.Error(w, "Could not render feedback form", http.StatusInternalServerError)
+	}
 }
 
-// Login handler renders the login page
-func Login(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "ui/templates/login.tmpl")
-}
-
-// CreateStory handler for handling story submissions
+// CreateStory handles the story creation form submission.
 func CreateStory(app *internal.Application, w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Handle story creation logic here
-		// Example: story := &data.Story{...}
-		// Insert story into the database
-		http.Redirect(w, r, "/stories/success", http.StatusSeeOther)
+		userID, err := app.Session.GetUserID(r) // Correctly using GetUserID on app.Session
+		if err != nil {
+			app.Logger.Error("Unable to retrieve user ID from session", err)
+			http.Error(w, "Unable to retrieve user ID", http.StatusUnauthorized)
+			return
+		}
+
+		story := &data.Story{
+			Title:    r.FormValue("title"),
+			Content:  r.FormValue("content"),
+			Language: r.FormValue("language"),
+			Location: r.FormValue("location"),
+			Category: r.FormValue("category"),
+			UserID:   userID, // Use the retrieved user ID
+		}
+
+		v := validator.New()
+		// Assuming data.ValidateStory is a custom function for validation
+		data.ValidateStory(v, story)
+
+		if !v.Valid() {
+			http.Error(w, "Validation failed", http.StatusBadRequest)
+			return
+		}
+
+		if err := app.Stories.Insert(story); err != nil {
+			app.Logger.Error("Unable to create story", err)
+			http.Error(w, fmt.Sprintf("Unable to create story: %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Ensure the story has been inserted correctly before using `story.ID`
+		http.Redirect(w, r, fmt.Sprintf("/stories/%s", story.ID), http.StatusSeeOther)
 		return
 	}
-	http.ServeFile(w, r, "ui/templates/create_story.tmpl")
+
+	err := app.Templates.Render(w, "create_story.tmpl", nil)
+	if err != nil {
+		app.Logger.Error("Could not render create story page", err)
+		http.Error(w, "Could not render create story page", http.StatusInternalServerError)
+	}
 }
 
-// EditStory handler for editing an existing story
+// EditStory handles story editing.
 func EditStory(app *internal.Application, w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Handle story editing logic here
-		// Example: story := &data.Story{...}
-		// Update story in the database
-		http.Redirect(w, r, "/stories/success", http.StatusSeeOther)
+		storyID := r.FormValue("id")
+		userID, err := app.Session.GetUserID(r) // Correctly using GetUserID on app.Session
+		if err != nil {
+			app.Logger.Error("Unable to retrieve user ID from session", err)
+			http.Error(w, "Unable to retrieve user ID", http.StatusUnauthorized)
+			return
+		}
+
+		story := &data.Story{
+			ID:       storyID,
+			Title:    r.FormValue("title"),
+			Content:  r.FormValue("content"),
+			Language: r.FormValue("language"),
+			Location: r.FormValue("location"),
+			Category: r.FormValue("category"),
+			UserID:   userID, // Use the retrieved user ID
+		}
+
+		v := validator.New()
+		data.ValidateStory(v, story)
+
+		if !v.Valid() {
+			http.Error(w, "Validation failed", http.StatusBadRequest)
+			return
+		}
+
+		if err := app.Stories.Update(story); err != nil {
+			app.Logger.Error("Unable to update story", err)
+			http.Error(w, fmt.Sprintf("Unable to update story: %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Corrected redirect after successful story update
+		http.Redirect(w, r, fmt.Sprintf("/stories/%s", storyID), http.StatusSeeOther)
 		return
 	}
-	http.ServeFile(w, r, "ui/templates/edit_story.tmpl")
+
+	storyID := chi.URLParam(r, "id")
+	story, err := app.Stories.GetByID(storyID)
+	if err != nil {
+		app.Logger.Error("Unable to find story", err)
+		http.Error(w, fmt.Sprintf("Unable to find story: %s", err), http.StatusNotFound)
+		return
+	}
+
+	userID, err := app.Session.GetUserID(r) // Correctly using GetUserID on app.Session
+	if err != nil {
+		app.Logger.Error("Unable to retrieve user ID from session", err)
+		http.Error(w, "Unable to retrieve user ID", http.StatusUnauthorized)
+		return
+	}
+
+	if story.UserID != userID {
+		http.Error(w, "You are not authorized to edit this story", http.StatusForbidden)
+		return
+	}
+
+	err = app.Templates.Render(w, "edit_story.tmpl", map[string]interface{}{"Story": story})
+	if err != nil {
+		app.Logger.Error("Could not render edit story page", err)
+		http.Error(w, "Could not render edit story page", http.StatusInternalServerError)
+	}
 }
 
-// DeleteStory handler for deleting a story
+// DeleteStory handles story deletion.
 func DeleteStory(app *internal.Application, w http.ResponseWriter, r *http.Request) {
-	// Handle story deletion logic here
-	// Example: delete story by ID
+	storyID := chi.URLParam(r, "id")
+	story, err := app.Stories.GetByID(storyID)
+	if err != nil {
+		app.Logger.Error("Unable to find story", err)
+		http.Error(w, fmt.Sprintf("Unable to find story: %s", err), http.StatusNotFound)
+		return
+	}
+
+	userID, err := app.Session.GetUserID(r) // Correctly using GetUserID on app.Session
+	if err != nil {
+		app.Logger.Error("Unable to retrieve user ID from session", err)
+		http.Error(w, "Unable to retrieve user ID", http.StatusUnauthorized)
+		return
+	}
+
+	if story.UserID != userID {
+		http.Error(w, "You are not authorized to delete this story", http.StatusForbidden)
+		return
+	}
+
+	if err := app.Stories.Delete(storyID); err != nil {
+		app.Logger.Error("Unable to delete story", err)
+		http.Error(w, fmt.Sprintf("Unable to delete story: %s", err), http.StatusInternalServerError)
+		return
+	}
+
 	http.Redirect(w, r, "/stories", http.StatusSeeOther)
 }

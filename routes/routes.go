@@ -1,41 +1,56 @@
 package routes
 
 import (
-	"net/http"
-
 	"github.com/RudyItza/mek-ah-tell-yuh/handlers"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal"
+	"github.com/gorilla/mux"
+	"net/http"
 )
 
 // Routes function sets up the application routes
 func Routes(app *internal.Application) http.Handler {
-	mux := http.NewServeMux()
+	muxRouter := mux.NewRouter()
 
 	// Home page route
-	mux.HandleFunc("/", handlers.Home)
+	muxRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		handlers.Home(app, w, r)
+	}).Methods(http.MethodGet)
 
 	// Feedback submission route
-	mux.HandleFunc("/feedback/new", func(w http.ResponseWriter, r *http.Request) {
-		handlers.CreateFeedback(app, w, r) // Passing app to the handler
-	})
+	muxRouter.HandleFunc("/feedback/new", func(w http.ResponseWriter, r *http.Request) {
+		handlers.CreateFeedback(app, w, r)
+	}).Methods(http.MethodGet, http.MethodPost)
+
+	// Feedback success route
+	muxRouter.HandleFunc("/feedback/success", func(w http.ResponseWriter, r *http.Request) {
+		// Render feedback success page
+		err := app.Templates.Render(w, "feedback_success.tmpl", nil)
+		if err != nil {
+			http.Error(w, "Could not render success page", http.StatusInternalServerError)
+		}
+	}).Methods(http.MethodGet)
 
 	// Login page route
-	mux.HandleFunc("/login", handlers.Login)
+	muxRouter.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		handlers.Login(app, w, r)
+	}).Methods(http.MethodGet, http.MethodPost)
 
 	// Create story route
-	mux.HandleFunc("/stories/new", func(w http.ResponseWriter, r *http.Request) {
-		handlers.CreateStory(app, w, r) // Passing app to the handler
-	})
+	muxRouter.HandleFunc("/stories/new", func(w http.ResponseWriter, r *http.Request) {
+		handlers.CreateStory(app, w, r)
+	}).Methods(http.MethodGet, http.MethodPost)
 
 	// Edit story route
-	mux.HandleFunc("/stories/edit", func(w http.ResponseWriter, r *http.Request) {
-		handlers.EditStory(app, w, r) // Passing app to the handler
-	})
+	muxRouter.HandleFunc("/stories/{id}/edit", func(w http.ResponseWriter, r *http.Request) {
+		handlers.EditStory(app, w, r)
+	}).Methods(http.MethodGet, http.MethodPost)
 
 	// Delete story route
-	mux.HandleFunc("/stories/delete", func(w http.ResponseWriter, r *http.Request) {
-		handlers.DeleteStory(app, w, r) // Passing app to the handler
-	})
+	muxRouter.HandleFunc("/stories/{id}/delete", func(w http.ResponseWriter, r *http.Request) {
+		handlers.DeleteStory(app, w, r)
+	}).Methods(http.MethodPost)
 
-	return mux
+	// Add other routes if needed
+
+	return muxRouter
 }
