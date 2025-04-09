@@ -9,12 +9,12 @@ import (
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/data"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/render"
 	"github.com/RudyItza/mek-ah-tell-yuh/routes"
-	"github.com/gorilla/sessions"
 )
 
 func main() {
 	// Logger initialization
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
 	// Database initialization
 	dataSourceName := "postgres://mekuser:folklore@localhost/mekahtellyuh?sslmode=disable"
 	db, err := data.InitializeDB(dataSourceName)
@@ -23,26 +23,30 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
+
 	// Template manager initialization
 	tmplMgr, err := render.NewTemplateManager("ui/templates/*.tmpl")
 	if err != nil {
 		logger.Error("Failed to load templates: " + err.Error())
 		os.Exit(1)
 	}
-	// Initialize session store
-	sessionStore := sessions.NewCookieStore([]byte("your-secret-key"))
+
+	// Initialize session store using internal.NewSession
+	sessionStore := internal.NewSession([]byte("your-secret-key"))
+
 	// Application initialization
 	app := &internal.Application{
 		Logger:    logger,
 		Feedback:  &data.FeedbackModel{DB: db},
 		Templates: tmplMgr,
-		Session:   sessionStore, // Pass session store here
+		Session:   sessionStore,
 		Stories:   &data.StoryModel{DB: db},
 	}
+
 	// Initialize routes
 	mux := routes.Routes(app)
-	logger.Info("Starting server on :4000")
 
+	logger.Info("Starting server on :4000")
 	err = http.ListenAndServe(":4000", mux)
 	if err != nil {
 		logger.Error(err.Error())
