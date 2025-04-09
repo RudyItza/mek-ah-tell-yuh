@@ -52,3 +52,39 @@ func CreateFeedback(app *internal.Application, w http.ResponseWriter, r *http.Re
 	// Render feedback form (you could use a template here)
 	http.ServeFile(w, r, "ui/templates/feedback_form.html")
 }
+
+// Login handler renders the login page
+func Login(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "ui/templates/login.tmpl")
+}
+
+// CreateStory handler for handling story submissions
+func CreateStory(app *internal.Application, w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		// Handle story creation logic here
+		// Example: story := &data.Story{...}
+		// Insert story into the database
+		http.Redirect(w, r, "/stories/success", http.StatusSeeOther)
+		return
+	}
+	http.ServeFile(w, r, "ui/templates/create_story.tmpl")
+}
+
+// EditStory handler for editing an existing story
+func EditStory(app *internal.Application, w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		// Handle story editing logic here
+		// Example: story := &data.Story{...}
+		// Update story in the database
+		http.Redirect(w, r, "/stories/success", http.StatusSeeOther)
+		return
+	}
+	http.ServeFile(w, r, "ui/templates/edit_story.tmpl")
+}
+
+// DeleteStory handler for deleting a story
+func DeleteStory(app *internal.Application, w http.ResponseWriter, r *http.Request) {
+	// Handle story deletion logic here
+	// Example: delete story by ID
+	http.Redirect(w, r, "/stories", http.StatusSeeOther)
+}
