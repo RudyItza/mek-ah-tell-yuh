@@ -12,11 +12,11 @@ import (
 	"github.com/go-chi/chi"
 )
 
-// Home renders the home page.
+// Home handler renders the home page
 func Home(app *internal.Application, w http.ResponseWriter, r *http.Request) {
+	// Render home.tmpl template
 	err := app.Templates.Render(w, "home.tmpl", nil)
 	if err != nil {
-		app.Logger.Error("Could not render home page", slog.Any("err", err))
 		http.Error(w, "Could not render home page", http.StatusInternalServerError)
 	}
 }

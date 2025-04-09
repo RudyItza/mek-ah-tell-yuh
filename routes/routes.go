@@ -1,10 +1,11 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/RudyItza/mek-ah-tell-yuh/handlers"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 // Routes function sets up the application routes
@@ -13,6 +14,10 @@ func Routes(app *internal.Application) http.Handler {
 
 	// Home page route
 	muxRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
+	}).Methods(http.MethodGet)
+
+	muxRouter.HandleFunc("/home", func(w http.ResponseWriter, r *http.Request) {
 		handlers.Home(app, w, r)
 	}).Methods(http.MethodGet)
 
