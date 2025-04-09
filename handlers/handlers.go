@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/RudyItza/mek-ah-tell-yuh/internal"
@@ -15,7 +16,7 @@ import (
 func Home(app *internal.Application, w http.ResponseWriter, r *http.Request) {
 	err := app.Templates.Render(w, "home.tmpl", nil)
 	if err != nil {
-		app.Logger.Error("Could not render home page", err)
+		app.Logger.Error("Could not render home page", slog.Any("err", err))
 		http.Error(w, "Could not render home page", http.StatusInternalServerError)
 	}
 }
@@ -23,16 +24,13 @@ func Home(app *internal.Application, w http.ResponseWriter, r *http.Request) {
 // Login handles user login.
 func Login(app *internal.Application, w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		// Handle login logic here
-		// Example: Validate user credentials and set session values
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
-	// Render login page
 	err := app.Templates.Render(w, "login.tmpl", nil)
 	if err != nil {
-		app.Logger.Error("Could not render login page", err)
+		app.Logger.Error("Could not render login page", slog.Any("err", err))
 		http.Error(w, "Could not render login page", http.StatusInternalServerError)
 	}
 }
@@ -47,7 +45,6 @@ func CreateFeedback(app *internal.Application, w http.ResponseWriter, r *http.Re
 		}
 
 		v := validator.New()
-		// Assuming data.ValidateFeedback is a custom function for validation
 		data.ValidateFeedback(v, feedback)
 
 		if !v.Valid() {
@@ -56,7 +53,7 @@ func CreateFeedback(app *internal.Application, w http.ResponseWriter, r *http.Re
 		}
 
 		if err := app.Feedback.Insert(feedback); err != nil {
-			app.Logger.Error("Unable to create feedback", err)
+			app.Logger.Error("Unable to create feedback", slog.Any("err", err))
 			http.Error(w, fmt.Sprintf("Unable to create feedback: %s", err), http.StatusInternalServerError)
 			return
 		}
@@ -67,7 +64,7 @@ func CreateFeedback(app *internal.Application, w http.ResponseWriter, r *http.Re
 
 	err := app.Templates.Render(w, "feedback_form.tmpl", nil)
 	if err != nil {
-		app.Logger.Error("Could not render feedback form", err)
+		app.Logger.Error("Could not render feedback form", slog.Any("err", err))
 		http.Error(w, "Could not render feedback form", http.StatusInternalServerError)
 	}
 }
@@ -75,9 +72,9 @@ func CreateFeedback(app *internal.Application, w http.ResponseWriter, r *http.Re
 // CreateStory handles the story creation form submission.
 func CreateStory(app *internal.Application, w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		userID, err := app.Session.GetUserID(r) // Correctly using GetUserID on app.Session
+		userID, err := app.Session.GetUserID(r)
 		if err != nil {
-			app.Logger.Error("Unable to retrieve user ID from session", err)
+			app.Logger.Error("Unable to retrieve user ID from session", slog.Any("err", err))
 			http.Error(w, "Unable to retrieve user ID", http.StatusUnauthorized)
 			return
 		}
@@ -88,11 +85,10 @@ func CreateStory(app *internal.Application, w http.ResponseWriter, r *http.Reque
 			Language: r.FormValue("language"),
 			Location: r.FormValue("location"),
 			Category: r.FormValue("category"),
-			UserID:   userID, // Use the retrieved user ID
+			UserID:   userID,
 		}
 
 		v := validator.New()
-		// Assuming data.ValidateStory is a custom function for validation
 		data.ValidateStory(v, story)
 
 		if !v.Valid() {
@@ -101,19 +97,18 @@ func CreateStory(app *internal.Application, w http.ResponseWriter, r *http.Reque
 		}
 
 		if err := app.Stories.Insert(story); err != nil {
-			app.Logger.Error("Unable to create story", err)
+			app.Logger.Error("Unable to create story", slog.Any("err", err))
 			http.Error(w, fmt.Sprintf("Unable to create story: %s", err), http.StatusInternalServerError)
 			return
 		}
 
-		// Ensure the story has been inserted correctly before using `story.ID`
 		http.Redirect(w, r, fmt.Sprintf("/stories/%s", story.ID), http.StatusSeeOther)
 		return
 	}
 
 	err := app.Templates.Render(w, "create_story.tmpl", nil)
 	if err != nil {
-		app.Logger.Error("Could not render create story page", err)
+		app.Logger.Error("Could not render create story page", slog.Any("err", err))
 		http.Error(w, "Could not render create story page", http.StatusInternalServerError)
 	}
 }
@@ -122,9 +117,9 @@ func CreateStory(app *internal.Application, w http.ResponseWriter, r *http.Reque
 func EditStory(app *internal.Application, w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		storyID := r.FormValue("id")
-		userID, err := app.Session.GetUserID(r) // Correctly using GetUserID on app.Session
+		userID, err := app.Session.GetUserID(r)
 		if err != nil {
-			app.Logger.Error("Unable to retrieve user ID from session", err)
+			app.Logger.Error("Unable to retrieve user ID from session", slog.Any("err", err))
 			http.Error(w, "Unable to retrieve user ID", http.StatusUnauthorized)
 			return
 		}
@@ -136,7 +131,7 @@ func EditStory(app *internal.Application, w http.ResponseWriter, r *http.Request
 			Language: r.FormValue("language"),
 			Location: r.FormValue("location"),
 			Category: r.FormValue("category"),
-			UserID:   userID, // Use the retrieved user ID
+			UserID:   userID,
 		}
 
 		v := validator.New()
@@ -148,12 +143,11 @@ func EditStory(app *internal.Application, w http.ResponseWriter, r *http.Request
 		}
 
 		if err := app.Stories.Update(story); err != nil {
-			app.Logger.Error("Unable to update story", err)
+			app.Logger.Error("Unable to update story", slog.Any("err", err))
 			http.Error(w, fmt.Sprintf("Unable to update story: %s", err), http.StatusInternalServerError)
 			return
 		}
 
-		// Corrected redirect after successful story update
 		http.Redirect(w, r, fmt.Sprintf("/stories/%s", storyID), http.StatusSeeOther)
 		return
 	}
@@ -161,14 +155,14 @@ func EditStory(app *internal.Application, w http.ResponseWriter, r *http.Request
 	storyID := chi.URLParam(r, "id")
 	story, err := app.Stories.GetByID(storyID)
 	if err != nil {
-		app.Logger.Error("Unable to find story", err)
+		app.Logger.Error("Unable to find story", slog.Any("err", err))
 		http.Error(w, fmt.Sprintf("Unable to find story: %s", err), http.StatusNotFound)
 		return
 	}
 
-	userID, err := app.Session.GetUserID(r) // Correctly using GetUserID on app.Session
+	userID, err := app.Session.GetUserID(r)
 	if err != nil {
-		app.Logger.Error("Unable to retrieve user ID from session", err)
+		app.Logger.Error("Unable to retrieve user ID from session", slog.Any("err", err))
 		http.Error(w, "Unable to retrieve user ID", http.StatusUnauthorized)
 		return
 	}
@@ -180,7 +174,7 @@ func EditStory(app *internal.Application, w http.ResponseWriter, r *http.Request
 
 	err = app.Templates.Render(w, "edit_story.tmpl", map[string]interface{}{"Story": story})
 	if err != nil {
-		app.Logger.Error("Could not render edit story page", err)
+		app.Logger.Error("Could not render edit story page", slog.Any("err", err))
 		http.Error(w, "Could not render edit story page", http.StatusInternalServerError)
 	}
 }
@@ -190,14 +184,14 @@ func DeleteStory(app *internal.Application, w http.ResponseWriter, r *http.Reque
 	storyID := chi.URLParam(r, "id")
 	story, err := app.Stories.GetByID(storyID)
 	if err != nil {
-		app.Logger.Error("Unable to find story", err)
+		app.Logger.Error("Unable to find story", slog.Any("err", err))
 		http.Error(w, fmt.Sprintf("Unable to find story: %s", err), http.StatusNotFound)
 		return
 	}
 
-	userID, err := app.Session.GetUserID(r) // Correctly using GetUserID on app.Session
+	userID, err := app.Session.GetUserID(r)
 	if err != nil {
-		app.Logger.Error("Unable to retrieve user ID from session", err)
+		app.Logger.Error("Unable to retrieve user ID from session", slog.Any("err", err))
 		http.Error(w, "Unable to retrieve user ID", http.StatusUnauthorized)
 		return
 	}
@@ -208,7 +202,7 @@ func DeleteStory(app *internal.Application, w http.ResponseWriter, r *http.Reque
 	}
 
 	if err := app.Stories.Delete(storyID); err != nil {
-		app.Logger.Error("Unable to delete story", err)
+		app.Logger.Error("Unable to delete story", slog.Any("err", err))
 		http.Error(w, fmt.Sprintf("Unable to delete story: %s", err), http.StatusInternalServerError)
 		return
 	}
