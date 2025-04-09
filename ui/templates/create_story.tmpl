@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-image: url('/static/images/folklore-bg.jpg');
+            background-image: url('https://www.guatemala.com/fotos/201709/giphy-70.gif');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -17,9 +17,11 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center">
+<body class="min-h-screen flex items-center justify-center flex-col">
+
     <div class="bg-overlay w-full h-full absolute z-0"></div>
-    <div class="z-10 p-8 rounded-2xl shadow-2xl max-w-md w-full bg-white/90">
+
+    <div class="z-10 p-8 rounded-2xl shadow-2xl max-w-md w-full bg-white/90 mb-8">
         <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Create a New Story</h2>
         <form method="POST" action="/stories/new">
             <!-- Title input -->
@@ -72,5 +74,18 @@
             </button>
         </form>
     </div>
+
+    <!-- Back to Home Button -->
+    <div class="z-10 w-full text-center mb-4">
+        <a href="/" class="text-white bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-lg transition">
+            Back to Home
+        </a>
+    </div>
+
+    <!-- Copyright -->
+    <div class="text-center text-gray-300 text-sm">
+        <p>&copy; 2025 Rudy Lionel Itza Jr. All rights reserved.</p>
+    </div>
+
 </body>
 </html>

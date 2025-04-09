@@ -9,6 +9,7 @@ import (
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/data"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/render"
 	"github.com/RudyItza/mek-ah-tell-yuh/routes"
+	"github.com/gorilla/sessions"
 )
 
 func main() {
@@ -31,15 +32,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Initialize session store using internal.NewSession
-	sessionStore := internal.NewSession([]byte("your-secret-key"))
+	// Initialize session store using gorilla sessions
+	sessionStore := sessions.NewCookieStore([]byte("your-secret-key"))
 
 	// Application initialization
 	app := &internal.Application{
 		Logger:    logger,
 		Feedback:  &data.FeedbackModel{DB: db},
 		Templates: tmplMgr,
-		Session:   sessionStore,
+		Session:   &internal.Session{Store: sessionStore}, // Set session store here
 		Stories:   &data.StoryModel{DB: db},
 	}
 

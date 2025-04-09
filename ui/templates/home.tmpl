@@ -78,8 +78,6 @@
         }
 
         .create { background-color: #3b82f6; }
-        .edit   { background-color: #facc15; color: black; }
-        .delete { background-color: #ef4444; }
         .feedback { background-color: #22c55e; }
         .login  { background-color: #374151; }
         .view   { background-color: #8b5cf6; }
@@ -90,14 +88,20 @@
 
     <div class="center-container">
         <h1 class="text-4xl font-bold mb-4">Welcome to Mek Ah Tell Yuh</h1>
-        <div class="button-grid">
-            <a href="/stories/new" class="btn create">Create Story</a>
-            <a href="/stories/edit" class="btn edit">Edit Story</a>
-            <a href="/stories/delete" class="btn delete">Delete Story</a>
-            <a href="/feedback/success" class="btn feedback">Feedback Success</a>
-            <a href="/login" class="btn login">Login</a>
-            <a href="/stories" class="btn view">View Stories</a>
-        </div>
+
+        <!-- Check if user is logged in -->
+        {{if .UserLoggedIn}}
+            <div class="button-grid">
+                <a href="/stories/new" class="btn create">Create Story</a>
+                <a href="/feedback/success" class="btn feedback">Feedback Success</a>
+                <a href="/stories" class="btn view">View Stories</a>
+            </div>
+        {{else}}
+            <p class="text-lg mb-4">Please <a href="/login" class="text-blue-400">log in</a> to create a story.</p>
+            <div class="button-grid">
+                <a href="/login" class="btn login">Login</a>
+            </div>
+        {{end}}
     </div>
 </body>
 </html>

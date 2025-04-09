@@ -14,4 +14,5 @@ type Application struct {
 	Templates *render.TemplateManager
 	Session   *Session // Use your custom Session type here, not *sessions.CookieStore
 	Stories   *data.StoryModel
+	Users     *data.UserModel
 }

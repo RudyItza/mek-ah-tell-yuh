@@ -1,3 +1,5 @@
+// routes.go
+
 package routes
 
 import (
@@ -5,6 +7,7 @@ import (
 
 	"github.com/RudyItza/mek-ah-tell-yuh/handlers"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal"
+	"github.com/RudyItza/mek-ah-tell-yuh/internal/middleware"
 	"github.com/gorilla/mux"
 )
 
@@ -40,22 +43,21 @@ func Routes(app *internal.Application) http.Handler {
 		handlers.Login(app, w, r)
 	}).Methods(http.MethodGet, http.MethodPost)
 
-	// Create story route
-	muxRouter.HandleFunc("/stories/new", func(w http.ResponseWriter, r *http.Request) {
+	// Apply authentication middleware to the story creation route
+	muxRouter.Handle("/stories/new", middleware.IsAuthenticated(app, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handlers.CreateStory(app, w, r)
-	}).Methods(http.MethodGet, http.MethodPost)
+	}))).Methods(http.MethodGet, http.MethodPost)
 
-	// Edit story route
-	muxRouter.HandleFunc("/stories/{id}/edit", func(w http.ResponseWriter, r *http.Request) {
+	// Apply authentication middleware to other routes (e.g., edit, delete)
+	muxRouter.Handle("/stories/{id}/edit", middleware.IsAuthenticated(app, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handlers.EditStory(app, w, r)
-	}).Methods(http.MethodGet, http.MethodPost)
+	}))).Methods(http.MethodGet, http.MethodPost)
 
-	// Delete story route
-	muxRouter.HandleFunc("/stories/{id}/delete", func(w http.ResponseWriter, r *http.Request) {
+	muxRouter.Handle("/stories/{id}/delete", middleware.IsAuthenticated(app, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handlers.DeleteStory(app, w, r)
-	}).Methods(http.MethodPost)
+	}))).Methods(http.MethodPost)
 
-	// Add other routes if needed
+	// Other routes...
 
 	return muxRouter
 }

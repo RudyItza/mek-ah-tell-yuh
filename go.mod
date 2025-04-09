@@ -1,6 +1,6 @@
 module github.com/RudyItza/mek-ah-tell-yuh
 
-go 1.23
+go 1.23.0
 
 toolchain go1.23.8
 
@@ -11,4 +11,7 @@ require (
 	github.com/lib/pq v1.10.9
 )
 
-require github.com/gorilla/securecookie v1.1.2 // indirect
+require (
+	github.com/gorilla/securecookie v1.1.2 // indirect
+	golang.org/x/crypto v0.37.0 // indirect
+)

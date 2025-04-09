@@ -8,6 +8,7 @@ import (
 	"github.com/RudyItza/mek-ah-tell-yuh/internal"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/data"
 	"github.com/RudyItza/mek-ah-tell-yuh/internal/validator"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/go-chi/chi"
 )
@@ -20,17 +21,33 @@ func Home(app *internal.Application, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not render home page", http.StatusInternalServerError)
 	}
 }
-
-// Login handles user login.
 func Login(app *internal.Application, w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		// Capture form data
+		email := r.FormValue("email")
+		password := r.FormValue("password")
+
+		// Attempt to find the user by email
+		user, err := app.Users.GetByEmail(email)
+		if err != nil {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+
+		// Check the password
+		if err := bcrypt.CompareHashAndPassword([]byte(user.Passwordhash), []byte(password)); err != nil {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+
+		// Redirect to home page on successful login
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
 		return
 	}
 
+	// Render login page
 	err := app.Templates.Render(w, "login.tmpl", nil)
 	if err != nil {
-		app.Logger.Error("Could not render login page", slog.Any("err", err))
 		http.Error(w, "Could not render login page", http.StatusInternalServerError)
 	}
 }
